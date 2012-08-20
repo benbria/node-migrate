@@ -1,8 +1,15 @@
 
+<<<<<<< HEAD
 0.1.4 / 2012-08-19
 ==================
 
   * Added coffee-script support [Vitaly Nikitin]
+=======
+0.1.4 / 2012-08-02 
+==================
+
+  * Added migrate environment
+>>>>>>> 2f38316103cfd57961d5c76e8aae5a9e2492ca85
 
 0.1.3 / 2012-06-25 
 ==================
