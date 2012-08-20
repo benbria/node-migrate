@@ -14,7 +14,8 @@ Usage: migrate [options] [command]
 
 Options:
 
-   -c, --chdir <path>   change the working directory
+   -c, --chdir <path>         change the working directory
+   -coffee, --coffee-script   coffee script migrations'
 
 Commands:
 
@@ -35,6 +36,14 @@ To create a migration, execute `migrate create` with an optional title. `node-mi
     exports.down = function(next, env){
       next();
     };
+
+If use the -coffee key
+
+    exports.up = (next, env) ->
+      next()
+
+    exports.down = (next, env) ->
+      next()
 
 All you have to do is populate these, invoking `next()` when complete, and you are ready to migrate!
 
@@ -85,6 +94,16 @@ The second creates `./migrations/001-add-owners.js`, which we can populate:
         db.rpop('owners', next);
       };
 
+For coffee:
+
+    $ migrate create -coffee add-pets
+    $ migrate create -coffee add-owners
+
+Result:
+
+    `./migrations/000-add-pets.coffee`
+    `./migrations/001-add-owners.coffee`
+
 ## Running Migrations
 
 When first running the migrations, all will be executed in sequence.
@@ -132,11 +151,19 @@ This will run up-migrations upto (and including) `002-coolest-pet.js`. Similarly
       down : migrations/001-add-jane.js
       migration : complete
 
+## Coffee-script problems
+
+This module require global `coffee-script`. If you have a problem with require this module, use the `node_modules` directory:
+
+      $export NODE_PATH={prefix}/lib/node_modules
+      $npm config get prefix
+
 ## License 
 
 (The MIT License)
 
 Copyright (c) 2011 TJ Holowaychuk &lt;tj@vision-media.ca&gt;
+Copyright (c) 2012 Vitaly Nikitin  &lt;vit.nikitin@gmail.com&gt;
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

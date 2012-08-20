@@ -3,10 +3,18 @@
 /**
  * Module dependencies.
  */
+try {
+	require(require.resolve("coffee-script"));
+} catch (err) {
+	console.log(err);
+	process.exit(1);
+}
 
 var migrate = require('../')
   , join = require('path').join
   , fs = require('fs');
+
+var isCoffee = false;
 
 /**
  * Arguments.
@@ -38,7 +46,8 @@ var usage = [
   , ''
   , '  Options:'
   , ''
-  , '     -c, --chdir <path>   change the working directory'
+  , '     -c, --chdir <path>            change the working directory'
+  , '     -coffee, --coffee-script      coffee script migrations'
   , ''
   , '  Commands:'
   , ''
@@ -63,6 +72,15 @@ var template = [
   , '  next();'
   , '};'
   , ''
+].join('\n');
+
+var coffee_template = [
+	''
+	, 'exports.up = (next, env) ->'
+	, '  next()'
+	, ''
+	, 'exports.down = (next, env) ->'
+	, '  next()'
 ].join('\n');
 
 // require an argument
@@ -95,6 +113,10 @@ while (args.length) {
     case '--chdir':
       process.chdir(cwd = required());
       break;
+	case '-coffee':
+	case '--coffee-script':
+		isCoffee = true;
+		break;
     default:
       if (options.command) {
         options.args.push(arg);
@@ -104,13 +126,16 @@ while (args.length) {
   }
 }
 
+log('coffee-script environment', isCoffee);
+
 /**
  * Load migrations.
  */
 
 function migrations() {
+  var reqexp = new RegExp("^\\d+.*\\.?(js" + (isCoffee ? "|coffee" : "") + ")$");
   return fs.readdirSync('migrations').filter(function(file){
-    return file.match(/^\d+.*\.js$/);
+    return file.match(reqexp);
   }).sort().map(function(file){
     return 'migrations/' + file;
   });
@@ -175,7 +200,7 @@ var commands = {
 
     var curr = pad((migrations.pop() || 0) + 1)
       , title = slugify([].slice.call(arguments).join(' '));
-    title = title ? curr + '-' + title : curr; 
+    title = title ? curr + '-' + title : curr;
     create(title);
   }
 };
@@ -198,9 +223,9 @@ function pad(n) {
  */
 
 function create(name) {
-  var path = 'migrations/' + name + '.js';
+  var path = 'migrations/' + name + (isCoffee ? '.coffee' : '.js');
   log('create', join(cwd, path));
-  fs.writeFileSync(path, template);
+  fs.writeFileSync(path, isCoffee ? coffee_template : template);
 }
 
 /**
@@ -234,7 +259,7 @@ function performMigration(direction, migrationName) {
   var migrationPath = migrationName
     ? join('migrations', migrationName)
     : migrationName;
- 
+
   set[direction](null, migrationPath);
 }
 
