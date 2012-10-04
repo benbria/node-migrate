@@ -64,14 +64,27 @@ var usage = [
 
 var template = [
     ''
-  , 'exports.up = function(next, env) {'
-  , '  next();'
+  , 'var db = require(\'db\');'
+  , ''
+  , 'exports.up = function(next) {'
+  , '  var query = \'\';'
+  , '  db.query(query, execResult(next));'
   , '};'
   , ''
-  , 'exports.down = function(next, env) {'
-  , '  next();'
+  , 'exports.down = function(next) {'
+  , '  var query = \'\';'
+  , '  db.query(query, execResult(next));'
   , '};'
   , ''
+  , 'var execResult = function(next) {'
+  , '  return function(err) {'
+  , '    if(err) {'
+  , '      console.log(err);'
+  , '    } else {'
+  , '      next();'
+  , '    }'
+  , '  }'
+  , '};'
 ].join('\n');
 
 var coffee_template = [
