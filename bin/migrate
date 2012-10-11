@@ -48,6 +48,7 @@ var usage = [
   , ''
   , '     -c, --chdir <path>            change the working directory'
   , '     -coffee, --coffee-script      coffee script migrations'
+  , '     -pg, --psql					use pg migration template'
   , ''
   , '  Commands:'
   , ''
@@ -61,39 +62,65 @@ var usage = [
 /**
  * Migration template.
  */
-
 var template = [
-    ''
-  , 'var db = require(\'db\');'
+  'exports.up = function(next){'
+  , ' next();'
+  , '};'
+  , ''
+  , 'exports.down = function(next){'
+  , ' next();'
+  , '};'
+].join('\n');
+
+var psql_template = [
+  'var db = require(\'db\');'
   , ''
   , 'exports.up = function(next) {'
   , '  var query = \'\';'
-  , '  db.query(query, execResult(next));'
+  , '  execResult(query, next);'
   , '};'
   , ''
   , 'exports.down = function(next) {'
   , '  var query = \'\';'
-  , '  db.query(query, execResult(next));'
+  , '  execResult(query, next);'
   , '};'
   , ''
-  , 'var execResult = function(next) {'
-  , '  return function(err) {'
+  , 'var execResult = function(query, next) {'
+  , '  db.query(query, function(err) {'
   , '    if(err) {'
-  , '      console.log(err);'
+  , '      console.error(err);'
   , '    } else {'
   , '      next();'
   , '    }'
-  , '  }'
+  , '  });'
   , '};'
 ].join('\n');
 
+
 var coffee_template = [
-	''
-	, 'exports.up = (next, env) ->'
+	'exports.up = (next) ->'
 	, '  next()'
 	, ''
-	, 'exports.down = (next, env) ->'
+	,'exports.down = (next, env) ->'
 	, '  next()'
+].join('\n');
+
+var psql_coffee_template = [
+	'db = require \'db\''
+	,'exports.up = (next, env) ->'
+	, '  query = \'\''
+	, '  execResult query, next'
+	, ''
+	, 'exports.down = (next, env) ->'
+	, '  query = \'\''
+	, '  execResult query, next'
+	, ''
+	, 'execResult = (query, next) ->'
+	, '  db.query query, (err) ->'
+	, '    if err'
+	, '      console.error err'
+	, '    else'
+	, '      next()'
 ].join('\n');
 
 // require an argument
@@ -125,6 +152,11 @@ while (args.length) {
     case '-c':
     case '--chdir':
       process.chdir(cwd = required());
+      break;
+	case '-pg':
+	case '--psql':
+	  template = psql_template;
+	  coffee_template = psql_coffee_template;
       break;
 	case '-coffee':
 	case '--coffee-script':
@@ -203,31 +235,12 @@ var commands = {
    */
 
   create: function(){
-    var migrations = fs.readdirSync('migrations').filter(function(file){
-      return file.match(/^\d+/);
-    }).map(function(file){
-      return parseInt(file.match(/^(\d+)/)[1], 10);
-    }).sort(function(a, b){
-      return a - b;
-    });
-
-    var curr = pad((migrations.pop() || 0) + 1)
+    var curr = Date.now()
       , title = slugify([].slice.call(arguments).join(' '));
     title = title ? curr + '-' + title : curr;
     create(title);
   }
 };
-
-/**
- * Pad the given number.
- *
- * @param {Number} n
- * @return {String}
- */
-
-function pad(n) {
-  return Array(4 - n.toString().length).join('0') + n;
-}
 
 /**
  * Create a migration with the given `name`.
