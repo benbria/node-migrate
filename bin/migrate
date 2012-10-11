@@ -101,17 +101,17 @@ var coffee_template = [
 	'exports.up = (next) ->'
 	, '  next()'
 	, ''
-	,'exports.down = (next, env) ->'
+	,'exports.down = (next) ->'
 	, '  next()'
 ].join('\n');
 
 var psql_coffee_template = [
 	'db = require \'db\''
-	,'exports.up = (next, env) ->'
+	,'exports.up = (next) ->'
 	, '  query = \'\''
 	, '  execResult query, next'
 	, ''
-	, 'exports.down = (next, env) ->'
+	, 'exports.down = (next) ->'
 	, '  query = \'\''
 	, '  execResult query, next'
 	, ''

@@ -15,7 +15,8 @@ Usage: migrate [options] [command]
 Options:
 
    -c, --chdir <path>         change the working directory
-   -coffee, --coffee-script   coffee script migrations'
+   -coffee, --coffee-script   coffee script migrations
+   -pg, --psql                use pg migration template
 
 Commands:
 
@@ -29,20 +30,20 @@ Commands:
 
 To create a migration, execute `migrate create` with an optional title. `node-migrate` will create a node module within `./migrations/` which contains the following two exports:
 
-    exports.up = function(next, env){
+    exports.up = function(next){
       next();
     };
 
-    exports.down = function(next, env){
+    exports.down = function(next){
       next();
     };
 
 If use the -coffee key
 
-    exports.up = (next, env) ->
+    exports.up = (next) ->
       next()
 
-    exports.down = (next, env) ->
+    exports.down = (next) ->
       next()
 
 All you have to do is populate these, invoking `next()` when complete, and you are ready to migrate!
@@ -52,44 +53,31 @@ For example:
     $ migrate create add-pets
     $ migrate create add-owners
 
-The first call creates `./migrations/000-add-pets.js`, which we can populate:
+The first call creates `./migrations/timestamp-add-pets.js`, which we can populate:
 
       var db = require('./db');
 
-      exports.up = function(next, env){
+      exports.up = function(next){
         db.rpush('pets', 'tobi');
         db.rpush('pets', 'loki');
         db.rpush('pets', 'jane', next);
       };
 
-      exports.down = function(next, env){
+      exports.down = function(next){
         db.rpop('pets');
         db.rpop('pets', next);
       };
 
-The second creates `./migrations/001-add-owners.js`, which we can populate:
-
-      //with environment
+The second creates `./migrations/timestamp-add-owners.js`, which we can populate:
 
       var db = require('./db');
-      var db_prod = require('./db.production');
 
-      function getDb(env) {
-        var res = db;
-        if(env == 'production'){
-          res = db_prod;
-        }
-        return (res);
-      }
-
-      exports.up = function(next, env){
-        var db = getDb(env);
+      exports.up = function(next){
         db.rpush('owners', 'taylor');
         db.rpush('owners', 'tj', next);
       };
 
-      exports.down = function(next, env){
-        var db = getDb(env);
+      exports.down = function(next){
         db.rpop('owners');
         db.rpop('owners', next);
       };
@@ -109,10 +97,10 @@ Result:
 When first running the migrations, all will be executed in sequence.
 
       $ migrate
-      up : migrations/000-add-pets.js
-      up : migrations/001-add-jane.js
-      up : migrations/002-add-owners.js
-      up : migrations/003-coolest-pet.js
+      up : migrations/timestamp-add-pets.js
+      up : migrations/timestamp-add-jane.js
+      up : migrations/timestamp-add-owners.js
+      up : migrations/timestamp-coolest-pet.js
       migration : complete
 
 Subsequent attempts will simply output "complete", as they have already been executed in this machine. `node-migrate` knows this because it stores the current state in `./migrations/.migrate[-env]` which is typically a file that SCMs like GIT should ignore.
@@ -123,10 +111,10 @@ Subsequent attempts will simply output "complete", as they have already been exe
 Run migrations with node environment:
 
       $ NODE_ENV=production migrate
-      up : migrations/000-add-pets.js
-      up : migrations/001-add-jane.js
-      up : migrations/002-add-owners.js
-      up : migrations/003-coolest-pet.js
+      up : migrations/timestamp-add-pets.js
+      up : migrations/timestamp-add-jane.js
+      up : migrations/timestamp-add-owners.js
+      up : migrations/timestamp-coolest-pet.js
       migration : complete
 
 State saved in .migrate-production file
@@ -134,21 +122,21 @@ State saved in .migrate-production file
 If we were to create another migration using `migrate create`, and then execute migrations again, we would execute only those not previously executed:
 
       $ migrate
-      up : migrates/004-coolest-owner.js
+      up : migrates/timestamp-coolest-owner.js
 
 You can also run migrations incrementally by specifying a migration.
 
-      $ migrate up 002-coolest-pet.js
-      up : migrations/000-add-pets.js
-      up : migrations/001-add-jane.js
-      up : migrations/002-add-owners.js
+      $ migrate up timestamp-coolest-pet.js
+      up : migrations/timestamp-add-pets.js
+      up : migrations/timestamp-add-jane.js
+      up : migrations/timestamp-add-owners.js
       migration : complete
 
-This will run up-migrations upto (and including) `002-coolest-pet.js`. Similarly you can run down-migrations upto (and including) a specific migration, instead of migrating all the way down.
+This will run up-migrations upto (and including) `timestamp-coolest-pet.js`. Similarly you can run down-migrations upto (and including) a specific migration, instead of migrating all the way down.
 
-      $ migrate down 001-add-jane.js
-      down : migrations/002-add-owners.js
-      down : migrations/001-add-jane.js
+      $ migrate down timestamp-add-jane.js
+      down : migrations/timestamp-add-owners.js
+      down : migrations/timestamp-add-jane.js
       migration : complete
 
 ## Coffee-script problems
