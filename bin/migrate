@@ -89,6 +89,7 @@ var psql_template = [
   , '  db.query(query, function(err) {'
   , '    if(err) {'
   , '      console.error(err);'
+  , '      process.exit(1);'
   , '    } else {'
   , '      next();'
   , '    }'
@@ -119,6 +120,7 @@ var psql_coffee_template = [
 	, '  db.query query, (err) ->'
 	, '    if err'
 	, '      console.error err'
+	, '      process.exit(1)'
 	, '    else'
 	, '      next()'
 ].join('\n');
