@@ -48,7 +48,8 @@ var usage = [
   , ''
   , '     -c, --chdir <path>            change the working directory'
   , '     -coffee, --coffee-script      coffee script migrations'
-  , '     -pg, --psql					use pg migration template'
+  , '     -r <module>                   require a module beforehand'
+  , '     -pg, --psql                   use pg migration template'
   , ''
   , '  Commands:'
   , ''
@@ -163,10 +164,13 @@ while (args.length) {
 	  template = psql_template;
 	  coffee_template = psql_coffee_template;
       break;
-	case '-coffee':
-	case '--coffee-script':
-		isCoffee = true;
-		break;
+    case '-coffee':
+    case '--coffee-script':
+      isCoffee = true;
+      break;
+    case '-r':
+      require(args.shift());
+      break;
     default:
       if (options.command) {
         options.args.push(arg);
