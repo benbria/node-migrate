@@ -48,7 +48,7 @@ var usage = [
   , ''
   , '     -c, --chdir <path>            change the working directory'
   , '     -coffee, --coffee-script      coffee script migrations'
-  , '     -streamline                   streamline.js migrations'
+  , '     -r <module>                   require a module beforehand'
   , '     -pg, --psql                   use pg migration template'
   , ''
   , '  Commands:'
@@ -165,8 +165,8 @@ while (args.length) {
     case '--coffee-script':
       isCoffee = true;
       break;
-    case '-streamline':
-      require('streamline/register');
+    case '-r':
+      require(args.shift());
       break;
     default:
       if (options.command) {
