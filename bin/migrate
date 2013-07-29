@@ -55,6 +55,9 @@ var usage = [
   , '     down   [name]    migrate down till given migration'
   , '     up     [name]    migrate up till given migration (the default command)'
   , '     create [title]   create a new migration file with optional [title]'
+  , '     check  [name]    check to see if a migration is required for given'
+  , '                      migration.  Exit status will be non-zero if migrations'
+  , '                      are needed.  Only up is supported.'
   , ''
 
 ].join('\n');
@@ -233,6 +236,13 @@ var commands = {
   },
 
   /**
+   * check [name]
+   */
+  check: function(migrationName){
+    checkMigration(migrationName);
+  },
+
+  /**
    * create [title]
    */
 
@@ -257,15 +267,12 @@ function create(name) {
 }
 
 /**
- * Perform a migration in the given `direction`.
- *
- * @param {Number} direction
+ * Load the set of migrations, and data from the .migrate file.
  */
-
-function performMigration(direction, migrationName) {
+function loadMigrations() {
   var fileName = '.migrate';
   if(env) {
-	  fileName += '-' + env;
+    fileName += '-' + env;
   }
   migrate('migrations/' + fileName);
   migrations().forEach(function(path){
@@ -274,6 +281,17 @@ function performMigration(direction, migrationName) {
   });
 
   var set = migrate();
+
+  return set;  
+}
+
+/**
+ * Perform a migration in the given `direction`.
+ *
+ * @param {Number} direction
+ */
+function performMigration(direction, migrationName) {
+  var set = loadMigrations();
 
   set.on('migration', function(migration, direction){
     log(direction, migration.title);
@@ -289,6 +307,17 @@ function performMigration(direction, migrationName) {
     : migrationName;
 
   set[direction](null, migrationPath);
+}
+
+/**
+ * Check to see if a migration is required to get to the given `migrationName`.
+ */
+function checkMigration(migrationName) {
+  var set = loadMigrations();
+
+  migrations = set.migrationsRequired('up', migrationName);
+  log("migrations required", migrations.length);
+  process.exit(migrations.length);
 }
 
 // invoke command
