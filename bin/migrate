@@ -282,7 +282,7 @@ function loadMigrations() {
 
   var set = migrate();
 
-  return set;  
+  return set;
 }
 
 /**
@@ -315,9 +315,15 @@ function performMigration(direction, migrationName) {
 function checkMigration(migrationName) {
   var set = loadMigrations();
 
-  migrations = set.migrationsRequired('up', migrationName);
-  log("migrations required", migrations.length);
-  process.exit(migrations.length);
+  set.migrationsRequired('up', migrationName, function(err, migrations) {
+    if(err) {
+      console.log(err);
+      process.exit(1);
+    } else {
+      log("migrations required", migrations.length);
+      process.exit(migrations.length);
+    }
+  });
 }
 
 // invoke command
